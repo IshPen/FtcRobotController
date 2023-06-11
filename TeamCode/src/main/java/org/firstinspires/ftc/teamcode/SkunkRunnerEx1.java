@@ -6,6 +6,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Autonomous(group = "drive")
 public class SkunkRunnerEx1 extends LinearOpMode {
     public DcMotorEx leftFront, leftRear, rightRear, rightFront;
@@ -33,13 +36,17 @@ public class SkunkRunnerEx1 extends LinearOpMode {
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        MecanumDrive drive = new MecanumDrive(leftFront, leftRear, rightRear, rightFront);
+
         leftEncoder = leftFront;
         rightEncoder = leftRear;
         frontEncoder = rightRear;
         backEncoder = rightFront;
 
-        stopMotors();
-        resetDriveEncoders();
+        //stopMotors();
+        drive.HaltDrive();
+        drive.resetDriveEncoders();
+
         int oldRightPosition = 0;
         int oldLeftPosition = 0;
         int oldFrontPosition = 0;
@@ -50,46 +57,39 @@ public class SkunkRunnerEx1 extends LinearOpMode {
         int currentFrontPosition = frontEncoder.getCurrentPosition();
         int currentBackPosition = backEncoder.getCurrentPosition();
 
-
-        boolean trigger = true;
         XyhVector START_POS = new XyhVector(0, 0, Math.toRadians(0));
         XyhVector pos = new XyhVector(START_POS.getX(), START_POS.getY(), START_POS.getTheta());
 
         Odometry tracker = new Odometry(leftEncoder, rightEncoder, frontEncoder, backEncoder, pos, currentLeftPosition, currentRightPosition, currentFrontPosition, currentBackPosition);
 
-        while (trigger) {
-            currentLeftPosition = tracker.getcLP();
-            currentRightPosition = tracker.getcRP();
-            currentFrontPosition = tracker.getcFP();
-            currentBackPosition = tracker.getcBP();
-            tracker.updateOdometry(currentLeftPosition, currentRightPosition, currentFrontPosition, currentBackPosition);
+        List<XyhVectorSA> mutableList = new ArrayList();
+        mutableList.add(new XyhVectorSA(72, 0, Math.toRadians(0), "S"));
+        mutableList.add(new XyhVectorSA(72, 72, Math.toRadians(0), "S"));
+
+        for (int i=0; i<mutableList.size();i++){
+            XyhVectorSA currentPath= mutableList.get(i);
+
+            while (drive.targetPositionReached(pos, currentPath) == false) {
+                currentLeftPosition = tracker.getcLP();
+                currentRightPosition = tracker.getcRP();
+                currentFrontPosition = tracker.getcFP();
+                currentBackPosition = tracker.getcBP();
+                tracker.updateOdometry(currentLeftPosition, currentRightPosition, currentFrontPosition, currentBackPosition);
+
+                pos = tracker.getPos(); // This is the position of the robot currently in inches
+
+                if (currentPath.getType() == "S"){
+                    drive.DriveForSpeed(pos, currentPath);
+                }
+                else if(currentPath.getType() == "A"){
+                    drive.DriveForAccuracy(currentPath);
+                }
+
+                telemetry.addData("X Position", pos.getX());
+                telemetry.addData("Y Position", pos.getY());
+                telemetry.addData("Theta", pos.getTheta());
+            }
+            drive.HaltDrive();
         }
     }
-
-
-    private void resetDriveEncoders() {
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    private void stopMotors() {
-        leftFront.setPower(0);
-        leftRear.setPower(0);
-        rightRear.setPower(0);
-        rightFront.setPower(0);
-    }
-
-
-
-
-
 }

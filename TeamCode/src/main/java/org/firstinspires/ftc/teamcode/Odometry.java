@@ -20,10 +20,10 @@ public class Odometry {
     final static double TICKS_PER_REVOLUTION = 8192; // encoder ticks per revolution, rev encoder
     final static double in_per_tick = 2.0 * Math.PI * WHEEL_RADIUS / TICKS_PER_REVOLUTION;
 
-    public int currentRightPosition;
-    public int currentLeftPosition;
-    public int currentFrontPosition;
-    public int currentBackPosition;
+    public int currentRightPosition = 0;
+    public int currentLeftPosition = 0;
+    public int currentFrontPosition = 0;
+    public int currentBackPosition = 0;
 
     public Odometry(DcMotorEx leftEncoder, DcMotorEx rightEncoder, DcMotorEx frontEncoder, DcMotorEx backEncoder, XyhVector pos, int currentLeftPosition, int currentRightPosition, int currentFrontPosition, int currentBackPosition) {
         this.leftEncoder = leftEncoder;
@@ -62,8 +62,8 @@ public class Odometry {
 
         double dtheta = (dthetaX+dthetaY)/2;
 
-        double dx = in_per_tick * ((dn1+dn2) / 2.0);
-        double dy = in_per_tick * (dn3 + ((dn2-dn1) / 2.0));
+        double dx = in_per_tick * ((dn1+dn2) / 2.0);//Calculate DeltaX in Inches
+        double dy = in_per_tick * (dn3 + ((dn2-dn1) / 2.0));//Calculate DeltaY in Inches
 
         //telemetrydx = dx;
         //telemetrydy = dy;
@@ -78,15 +78,20 @@ public class Odometry {
         pos.setTheta(pos.getTheta()+dtheta);
     }
     public int getcLP() {
-        return currentLeftPosition;
+        this.currentLeftPosition = leftEncoder.getCurrentPosition();
+        return this.currentLeftPosition;
     }
     public int getcRP() {
-        return currentRightPosition;
+        this.currentRightPosition = -rightEncoder.getCurrentPosition();
+        return this.currentRightPosition;
     }
     public int getcFP() {
-        return currentFrontPosition;
+        this.currentFrontPosition = frontEncoder.getCurrentPosition();
+        return this.currentFrontPosition;
     }
     public int getcBP() {
-        return currentBackPosition;
+        this.currentBackPosition = backEncoder.getCurrentPosition();
+        return this.currentBackPosition;
     }
+    public XyhVector getPos(){return pos;}
 }
