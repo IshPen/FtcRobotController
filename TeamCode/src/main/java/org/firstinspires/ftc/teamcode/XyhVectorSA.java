@@ -6,11 +6,11 @@ public class XyhVectorSA {
     private double theta;
     private String type;
 
-    public XyhVectorSA(double xPosition, double yPosition, double theta, String type) {
-        this.xPosition = xPosition;
-        this.yPosition = yPosition;
-        this.theta = theta;
-        this.type = type;
+    public XyhVectorSA(double xPosition, double yPosition, double theta, String type) { // This type is to store paths in the executable array
+        this.xPosition = xPosition; // Store the xPosition where you want to go
+        this.yPosition = yPosition; // Store the yPosition where you want to go
+        this.theta = theta; // Store the theta where you want to go
+        this.type = type; // Store the type of path this is ("S" = DriveForSpeed, "A" = DriveForAccuracy)
     }
 
     // Getter methods

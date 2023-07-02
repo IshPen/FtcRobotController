@@ -5,6 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import static org.firstinspires.ftc.teamcode.DriveConstants.MAX_VEL;
+import static org.firstinspires.ftc.teamcode.DriveConstants.MAX_ACCEL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +71,12 @@ public class SkunkRunnerEx1 extends LinearOpMode {
         mutableList.add(new XyhVectorSA(72, 72, Math.toRadians(0), "S"));
 
         for (int i=0; i<mutableList.size();i++){
-            XyhVectorSA currentPath= mutableList.get(i);
+            XyhVectorSA currentPath = mutableList.get(i);
+
+            // Get the starting point at which you are starting a path
+            tracker.updateOdometry(currentLeftPosition, currentRightPosition, currentFrontPosition, currentBackPosition);
+            XyhVector startPosition = tracker.getPos();
+            ElapsedTime startTime = new ElapsedTime();
 
             while (drive.targetPositionReached(pos, currentPath) == false) {
                 currentLeftPosition = tracker.getcLP();
@@ -82,14 +91,14 @@ public class SkunkRunnerEx1 extends LinearOpMode {
                     drive.DriveForSpeed(pos, currentPath);
                 }
                 else if(currentPath.getType() == "A"){
-                    drive.DriveForAccuracy(currentPath);
+                    drive.DriveForAccuracy(pos, startPosition, currentPath, startTime, MAX_VEL, MAX_ACCEL);
                 }
 
                 telemetry.addData("X Position", pos.getX());
                 telemetry.addData("Y Position", pos.getY());
                 telemetry.addData("Theta", pos.getTheta());
             }
-            drive.HaltDrive();
+            drive.HaltDrive(); // Brake motors when reaching final destination
         }
     }
 }
